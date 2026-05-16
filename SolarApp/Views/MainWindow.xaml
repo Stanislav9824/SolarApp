@@ -1,0 +1,244 @@
+<Window x:Class="SolarApp.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:SolarApp.Converters"
+        Title="Solar Strategy"
+        Height="900" Width="1350"
+        Icon="pack://application:,,,/Resources/icon.ico"
+        Background="#FF121212" WindowStartupLocation="CenterScreen"
+        KeyDown="Window_KeyDown">
+
+    <Window.Resources>
+        <!-- Конвертери для прив'язки даних -->
+        <converters:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <converters:ImprovementToColorConverter x:Key="ImprovementToColor"/>
+        <converters:EnergyToBarWidthConverter x:Key="EnergyToBarWidth"/>
+        <converters:EfficiencyToBarColorConverter x:Key="EffToBarColor"/>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="370"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ====== ЛІВА ПАНЕЛЬ ====== -->
+        <ScrollViewer Grid.Column="0" Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,20,0">
+            <StackPanel>
+                <!-- Заголовок -->
+                <TextBlock Text="Solar Strategy" FontSize="32" FontWeight="Bold" Foreground="Yellow" Margin="0,0,0,5"/>
+                <TextBlock Text="Оптимізація енергомережі України" Foreground="Aquamarine" FontSize="18" Margin="0,0,0,20"/>
+
+                <!-- Підказка (коли нічого не обрано) -->
+                <TextBlock Text="Оберіть сонячну панель на карті"
+                           FontSize="20" FontWeight="Bold" Foreground="Orange"
+                           HorizontalAlignment="Center" Margin="0,0,0,10"
+                           Visibility="{Binding IsPanelSelected, Converter={StaticResource InverseBoolToVis}}"/>
+
+                <!-- Блок налаштувань обраної панелі -->
+                <StackPanel Visibility="{Binding IsPanelSelected, Converter={StaticResource BoolToVis}}">
+
+                    <!-- Налаштування параметрів -->
+                    <Border Background="#1E1E1E" CornerRadius="10" Padding="15" BorderBrush="#333" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="НАЛАШТУВАННЯ ПАНЕЛІ" Style="{StaticResource SectionHeaderStyle}"/>
+
+                            <!-- Потужність -->
+                            <TextBlock Text="Потужність панелі (50–1000 Вт):" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding PowerInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource DarkTextBoxStyle}" Margin="0,0,0,10"/>
+
+                            <!-- Кут нахилу -->
+                            <TextBlock Style="{StaticResource LabelStyle}">
+                                <Run Text="Кут нахилу (0–60°), оптимальний: "/>
+                                <Run Text="{Binding SelectedPanel.OptimalTiltAngle, StringFormat={}{0:F1}°, FallbackValue=—}" Foreground="LimeGreen"/>
+                            </TextBlock>
+                            <TextBox Text="{Binding TiltInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource DarkTextBoxStyle}" Margin="0,0,0,10"/>
+
+                            <!-- Орієнтація -->
+                            <TextBlock Text="Орієнтація панелі:" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding OrientationOptions}"
+                                      SelectedIndex="{Binding SelectedOrientationIndex}"
+                                      Style="{StaticResource DarkComboBoxStyle}" Margin="0,0,0,12"/>
+
+                            <!-- Кнопка застосування -->
+                            <Button Content="ЗАСТОСУВАТИ ТА ПЕРЕРАХУВАТИ"
+                                    Command="{Binding ApplySettingsCommand}"
+                                    Background="#FF0078D7" Foreground="White"
+                                    FontWeight="Bold" FontSize="14" Height="38" Cursor="Hand">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="6"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Інформація про панель -->
+                    <Border Background="#1E1E1E" CornerRadius="10" Padding="15" Margin="0,12,0,0" BorderBrush="#333" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="ІНФОРМАЦІЯ ПРО ПАНЕЛЬ" Style="{StaticResource SectionHeaderStyle}"/>
+
+                            <TextBlock Foreground="#CCC" FontSize="14" LineHeight="24" TextWrapping="Wrap">
+                                <Run Text="Місто: " Foreground="#999"/><Run Text="{Binding SelectedPanel.City, FallbackValue=—}" FontWeight="Bold"/><LineBreak/>
+                                <Run Text="Координати: " Foreground="#999"/><Run Text="{Binding SelectedPanel.Latitude, StringFormat={}{0:F2}°N, FallbackValue=—}"/><Run Text=", "/><Run Text="{Binding SelectedPanel.Longitude, StringFormat={}{0:F2}°E, FallbackValue=—}"/><LineBreak/>
+                                <Run Text="Потужність: " Foreground="#999"/><Run Text="{Binding SelectedPanel.PowerWatts, StringFormat={}{0:F0} Вт, FallbackValue=—}"/><LineBreak/>
+                                <Run Text="Кут нахилу: " Foreground="#999"/><Run Text="{Binding SelectedPanel.TiltAngle, StringFormat={}{0:F1}°, FallbackValue=—}"/><LineBreak/>
+                                <Run Text="Температура: " Foreground="#999"/><Run Text="{Binding SelectedPanel.Temperature, StringFormat={}{0:F1}°C, FallbackValue=—}"/><LineBreak/>
+                                <Run Text="Погода: " Foreground="#999"/><Run Text="{Binding SelectedPanel.WeatherConditionText, FallbackValue=—}"/><Run Text=" ("/><Run Text="{Binding SelectedPanel.CloudCoverPercent, StringFormat={}{0}%, FallbackValue=—}"/><Run Text=")"/><LineBreak/>
+                                <Run Text="Сонячних годин: " Foreground="#999"/><Run Text="{Binding SelectedPanel.SunHoursPerDay, StringFormat={}{0:F1} год, FallbackValue=—}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Коефіцієнти та результат -->
+                    <Border Background="#1E1E1E" CornerRadius="10" Padding="15" Margin="0,12,0,0" BorderBrush="#333" BorderThickness="1"
+                            Visibility="{Binding SelectedPanel.IsWeatherLoaded, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                        <StackPanel>
+                            <TextBlock Text="РЕЗУЛЬТАТ РОЗРАХУНКУ" Style="{StaticResource SectionHeaderStyle}"/>
+
+                            <TextBlock Foreground="#CCC" FontSize="14" LineHeight="24" TextWrapping="Wrap">
+                                <Run Text="K погоди: " Foreground="#999"/><Run Text="{Binding SelectedPanel.WeatherCoefficient, StringFormat={}{0:F2}, FallbackValue=—}"/><LineBreak/>
+                                <Run Text="K орієнтації: " Foreground="#999"/><Run Text="{Binding SelectedPanel.OrientationCoefficient, StringFormat={}{0:F2}, FallbackValue=—}"/><LineBreak/>
+                                <Run Text="K нахилу: " Foreground="#999"/><Run Text="{Binding SelectedPanel.TiltCoefficient, StringFormat={}{0:F3}, FallbackValue=—}"/><LineBreak/>
+                                <Run Text="K температури: " Foreground="#999"/><Run Text="{Binding SelectedPanel.TemperatureCoefficient, StringFormat={}{0:F3}, FallbackValue=—}"/><LineBreak/>
+                                <Run Text="Ефективність: " Foreground="#999"/><Run Text="{Binding SelectedPanel.OverallEfficiencyPercent, StringFormat={}{0:F1}%, FallbackValue=—}" Foreground="Gold" FontWeight="Bold"/>
+                            </TextBlock>
+
+                            <Border Background="#0A2A0A" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                                <TextBlock HorizontalAlignment="Center" FontSize="18" FontWeight="Bold" Foreground="LimeGreen">
+                                    <Run Text="{Binding SelectedPanel.EnergyKWhPerDay, StringFormat={}{0:F3}, FallbackValue=0}"/>
+                                    <Run Text=" кВт·год/день"/>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Кнопка видалення -->
+                    <Button Content="Видалити цю панель"
+                            Command="{Binding DeletePanelCommand}"
+                            Background="#CC3333" Foreground="White"
+                            FontSize="12" Height="32" Cursor="Hand" Margin="0,12,0,0">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+
+                <Separator Background="#333" Margin="0,20"/>
+
+                <!-- Глобальна статистика мережі -->
+                <TextBlock Text="ЗАГАЛЬНИЙ СТАН МЕРЕЖІ" Foreground="White" FontSize="16" FontWeight="Bold" Margin="0,10,0,8"/>
+                <Border Background="#252525" CornerRadius="10" Padding="16" BorderBrush="Gold" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock FontSize="15" Foreground="White">
+                            <Run Text="Середня ефективність: "/>
+                            <Run Text="{Binding AverageEfficiency, StringFormat={}{0:F1}%}" FontWeight="Bold"/>
+                        </TextBlock>
+                        <TextBlock FontSize="15" Foreground="White" Margin="0,6,0,0">
+                            <Run Text="Сумарна енергія: "/>
+                            <Run Text="{Binding TotalEnergyKWh, StringFormat={}{0:F3} кВт·год/день}" FontWeight="Bold" Foreground="Gold"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding NetworkStatusText}" FontSize="14" Foreground="LightGray" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Гістограма енергії по панелях -->
+                <TextBlock Text="ГРАФІК ЕНЕРГІЇ (кВт·год/день)" Foreground="White" FontSize="14" FontWeight="Bold" Margin="0,20,0,8"/>
+                <Border Background="#1A1A1A" CornerRadius="8" Padding="10" BorderBrush="#333" BorderThickness="1" MinHeight="50">
+                    <ItemsControl ItemsSource="{Binding Panels}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="70"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Назва міста -->
+                                    <TextBlock Grid.Column="0" Text="{Binding City}" Foreground="#AAA" FontSize="12"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                                    <!-- Стовпець гістограми -->
+                                    <Border Grid.Column="1" Height="20" Margin="5,0"
+                                            CornerRadius="3" HorizontalAlignment="Left"
+                                            Width="{Binding EnergyKWhPerDay, Converter={StaticResource EnergyToBarWidth}, ConverterParameter=180}"
+                                            Background="{Binding OverallEfficiencyPercent, Converter={StaticResource EffToBarColor}}"/>
+
+                                    <!-- Значення -->
+                                    <TextBlock Grid.Column="2" Foreground="White" FontSize="11" FontWeight="Bold"
+                                               VerticalAlignment="Center" HorizontalAlignment="Right">
+                                        <Run Text="{Binding EnergyKWhPerDay, StringFormat={}{0:F2}, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ====== КАРТА ====== -->
+        <Grid Grid.Column="1" Grid.Row="0" Background="#0A0A0A">
+            <Border BorderBrush="#333" BorderThickness="1" CornerRadius="5">
+                <Grid>
+                    <Image Source="pack://application:,,,/Resources/map.png" Stretch="Uniform" Opacity="0.8"/>
+                    <Canvas x:Name="MapCanvas" Background="Transparent"
+                            MouseLeftButtonDown="MapCanvas_MouseLeftButtonDown"/>
+                </Grid>
+            </Border>
+
+            <!-- Індикатор завантаження -->
+            <Border Background="#80000000" CornerRadius="5"
+                    Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="Завантаження..." FontSize="24" Foreground="White"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Статус -->
+            <Border Background="#CC1E1E1E" CornerRadius="5" Padding="10,6"
+                    VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <TextBlock Text="{Binding StatusText}" Foreground="Aquamarine" FontSize="13"/>
+            </Border>
+        </Grid>
+
+        <!-- ====== НИЖНІ КНОПКИ ====== -->
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal"
+                    HorizontalAlignment="Center" Margin="0,20,0,0">
+
+            <Button Content="ДОДАТИ ПАНЕЛЬ" Width="220" Height="48" Margin="0,0,15,0"
+                    Background="#2E7D32" Foreground="White" FontSize="16" FontWeight="Bold"
+                    Command="{Binding StartAddPanelCommand}" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style>
+                </Button.Resources>
+            </Button>
+
+            <Button Content="ЕКСПОРТ ЗВІТУ" Width="200" Height="48" Margin="0,0,15,0"
+                    Background="#1565C0" Foreground="White" FontSize="16" FontWeight="Bold"
+                    Command="{Binding ExportResultsCommand}" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style>
+                </Button.Resources>
+            </Button>
+
+            <Button Content="ЗАВЕРШИТИ ОПТИМІЗАЦІЮ" Width="280" Height="48"
+                    Background="#C62828" Foreground="White" FontSize="16" FontWeight="Bold"
+                    Command="{Binding FinishCommand}" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="10"/></Style>
+                </Button.Resources>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>
