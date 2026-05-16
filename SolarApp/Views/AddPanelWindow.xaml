@@ -1,0 +1,98 @@
+<Window x:Class="SolarApp.Views.AddPanelWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Додати сонячну панель"
+        Height="450" Width="420"
+        Background="#FF1E1E1E" Foreground="White"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        KeyDown="Window_KeyDown">
+
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <TextBlock Grid.Row="0" Text="НОВА СОНЯЧНА ПАНЕЛЬ" FontSize="20" FontWeight="Bold"
+                   Foreground="DodgerBlue" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+        <!-- Назва міста -->
+        <TextBlock Grid.Row="1" Text="Назва міста:" Style="{StaticResource LabelStyle}"/>
+        <TextBox Grid.Row="2" Text="{Binding CityName, UpdateSourceTrigger=PropertyChanged}"
+                 Style="{StaticResource DarkTextBoxStyle}" Margin="0,0,0,10"/>
+
+        <!-- Координати -->
+        <Grid Grid.Row="3" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Широта:" Style="{StaticResource LabelStyle}"/>
+                <TextBox Text="{Binding LatitudeInput, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource DarkTextBoxStyle}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="Довгота:" Style="{StaticResource LabelStyle}"/>
+                <TextBox Text="{Binding LongitudeInput, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource DarkTextBoxStyle}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Потужність -->
+        <TextBlock Grid.Row="4" Text="Потужність (Вт):" Style="{StaticResource LabelStyle}"/>
+        <TextBox Grid.Row="5" Text="{Binding PowerInput, UpdateSourceTrigger=PropertyChanged}"
+                 Style="{StaticResource DarkTextBoxStyle}" Margin="0,0,0,10"/>
+
+        <!-- Орієнтація -->
+        <TextBlock Grid.Row="6" Text="Орієнтація:" Style="{StaticResource LabelStyle}"/>
+        <ComboBox Grid.Row="7" ItemsSource="{Binding OrientationOptions}"
+                  SelectedIndex="{Binding SelectedOrientationIndex}"
+                  Style="{StaticResource DarkComboBoxStyle}" Margin="0,0,0,10"
+                  VerticalAlignment="Top"/>
+
+        <!-- Помилка + Кнопки -->
+        <StackPanel Grid.Row="8">
+            <!-- Повідомлення про помилку -->
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="Tomato" FontSize="12"
+                       TextWrapping="Wrap" Margin="0,0,0,10"
+                       Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisConverter}, FallbackValue=Collapsed}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="ЗБЕРЕГТИ"
+                        Command="{Binding SaveCommand}"
+                        Background="#2E7D32" Foreground="White"
+                        FontWeight="Bold" Height="38" FontSize="14" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                    </Button.Resources>
+                </Button>
+
+                <Button Grid.Column="2" Content="СКАСУВАТИ"
+                        Command="{Binding CancelCommand}"
+                        Background="#555" Foreground="White"
+                        FontWeight="Bold" Height="38" FontSize="14" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </Grid>
+</Window>
